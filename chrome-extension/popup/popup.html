@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <h1>강의 pause → 음악 탭 전환</h1>
+
+    <section>
+      <h2>1. 강의 탭 지정</h2>
+      <p class="hint">유튜브 등 강의 영상을 재생 중인 탭에서 눌러주세요.</p>
+      <button id="setLectureTabBtn">현재 탭을 강의 탭으로 지정</button>
+      <p id="lectureTabStatus">지정 안 됨</p>
+    </section>
+
+    <section>
+      <h2>2. 음악 탭 지정</h2>
+      <p class="hint">YouTube Music, Spotify Web Player 등 아무 사이트나 가능합니다.</p>
+      <button id="setMusicTabBtn">현재 탭을 음악 탭으로 지정</button>
+      <p id="musicTabStatus">지정 안 됨</p>
+    </section>
+
+    <section>
+      <h2>3. 음악 볼륨</h2>
+      <input type="range" id="volumeSlider" min="0" max="100" value="50" />
+      <span id="volumeValue">50</span>%
+    </section>
+
+    <p id="errorBox" class="error"></p>
+
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Lecture Pause → Music Tab",
+  "version": "0.1.0",
+  "description": "강의 탭을 pause하면 지정한 음악 탭이 자동으로 재생되고, 재개하면 멈춥니다.",
+  "permissions": ["storage", "scripting", "tabs", "activeTab"],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup/popup.html"
+  }
+}
