@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-Readiness Cartography</title>
+<style>
+  /*
+    cartography 대시보드 템플릿.
+    이 스킬을 실행하는 Claude는 아래 <script id="cartography-data"> 안의 DATA 객체를
+    references/rubric.md의 JSON 스키마를 따르는 실제 감사 결과로 통째로 교체한 뒤
+    파일을 저장한다. 그 외 마크업/스타일/렌더 로직은 손대지 않는다.
+    팔레트/미터/상태색 규칙은 dataviz 스킬의 references/palette.md, marks-and-anatomy.md 기준.
+  */
+  :root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page-plane:      #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --border:         rgba(11,11,11,0.10);
+    --status-good:     #0ca30c;
+    --status-warning:  #fab219;
+    --status-serious:  #ec835a;
+    --status-critical: #d03b3b;
+    --status-good-track:     rgba(12,163,12,0.13);
+    --status-warning-track:  rgba(250,178,25,0.20);
+    --status-critical-track: rgba(208,59,59,0.13);
+    --font-sans: system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page-plane:      #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --gridline:       #2c2c2a;
+      --border:         rgba(255,255,255,0.10);
+      --status-good:     #0ca30c;
+      --status-warning:  #fab219;
+      --status-serious:  #ec835a;
+      --status-critical: #e66767;
+      --status-good-track:     rgba(12,163,12,0.18);
+      --status-warning-track:  rgba(250,178,25,0.16);
+      --status-critical-track: rgba(230,103,103,0.18);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page-plane:      #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --border:         rgba(255,255,255,0.10);
+    --status-good:     #0ca30c;
+    --status-warning:  #fab219;
+    --status-serious:  #ec835a;
+    --status-critical: #e66767;
+    --status-good-track:     rgba(12,163,12,0.18);
+    --status-warning-track:  rgba(250,178,25,0.16);
+    --status-critical-track: rgba(230,103,103,0.18);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--page-plane);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  body {
+    padding: 32px 16px 64px;
+  }
+  main {
+    max-width: 920px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .kicker {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  header h1 {
+    font-size: 22px;
+    margin: 4px 0 2px;
+    font-weight: 700;
+  }
+  header .meta-line {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+  }
+
+  /* ---- Hero ---- */
+  .hero {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 22px;
+  }
+  .hero-figure {
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .hero-figure .max {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+  .hero-mid { display: flex; flex-direction: column; gap: 8px; }
+  .hero-label { font-size: 13px; color: var(--text-secondary); }
+  .hero-meter-track {
+    width: 100%;
+    height: 10px;
+    border-radius: 5px;
+    background: var(--gridline);
+    overflow: hidden;
+  }
+  .hero-meter-fill {
+    height: 100%;
+    border-radius: 5px;
+  }
+  .hero-delta { font-size: 12px; }
+  .hero-delta.up { color: var(--status-good); }
+  .hero-delta.down { color: var(--status-critical); }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .chip.good     { background: var(--status-good-track);     color: var(--status-good); }
+  .chip.warning  { background: var(--status-warning-track);  color: var(--text-primary); }
+  .chip.critical { background: var(--status-critical-track); color: var(--status-critical); }
+  .chip.good .dot     { background: var(--status-good); }
+  .chip.warning .dot  { background: var(--status-warning); }
+  .chip.critical .dot { background: var(--status-critical); }
+  .tier-sub { font-size: 12px; color: var(--text-secondary); margin-top: 6px; max-width: 280px; text-align: right; }
+
+  /* ---- Category meters ---- */
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin: 4px 2px 0;
+  }
+  .cat-list { display: flex; flex-direction: column; }
+  .cat-row {
+    display: grid;
+    grid-template-columns: 34px 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-top: 1px solid var(--gridline);
+  }
+  .cat-row:first-of-type { border-top: none; }
+  .cat-code {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    background: var(--page-plane);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; color: var(--text-secondary);
+  }
+  .cat-main { min-width: 0; }
+  .cat-name-line {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+    font-size: 14px; font-weight: 600; margin-bottom: 6px;
+  }
+  .cat-name-line .pts { font-size: 12px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .cat-track {
+    width: 100%; height: 8px; border-radius: 4px; background: var(--gridline); overflow: hidden;
+  }
+  .cat-fill { height: 100%; border-radius: 4px; }
+  .cat-status {
+    display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; white-space: nowrap;
+  }
+  .cat-status .glyph { font-size: 11px; }
+  .cat-status.good { color: var(--status-good); }
+  .cat-status.warning { color: #a06b00; }
+  .cat-status.critical { color: var(--status-critical); }
+  :root[data-theme="dark"] .cat-status.warning,
+  :root:not([data-theme="light"]) .cat-status.warning { color: var(--status-warning); }
+
+  .cat-details {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+    padding-left: 48px;
+  }
+  .cat-details summary {
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .criterion {
+    margin-top: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .criterion .c-head {
+    display: flex; justify-content: space-between; gap: 10px;
+    font-weight: 600; color: var(--text-primary);
+  }
+  .criterion .c-pts { color: var(--text-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .criterion .c-evidence { color: var(--text-secondary); margin-top: 2px; }
+  .criterion .c-gap { color: var(--status-serious); margin-top: 2px; }
+  .criterion .c-confidence { color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+
+  /* ---- ROI action table ---- */
+  .table-scroll { overflow-x: auto; }
+  table.actions {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 640px;
+  }
+  table.actions th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 700;
+    padding: 0 10px 8px;
+    border-bottom: 1px solid var(--gridline);
+  }
+  table.actions td {
+    padding: 10px 10px;
+    border-bottom: 1px solid var(--gridline);
+    vertical-align: top;
+  }
+  table.actions tr:last-child td { border-bottom: none; }
+  table.actions td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rank-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 5px;
+    background: var(--page-plane); border: 1px solid var(--border);
+    font-size: 11px; font-weight: 700; color: var(--text-secondary);
+  }
+  .cat-tag {
+    display: inline-block;
+    font-size: 11px; font-weight: 700;
+    color: var(--text-secondary);
+    background: var(--page-plane);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 1px 6px;
+  }
+  .action-rationale { color: var(--text-muted); font-size: 12px; margin-top: 3px; }
+  .effort-tag { font-size: 11px; color: var(--text-muted); }
+
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding-top: 8px;
+  }
+
+  @media (max-width: 560px) {
+    .hero { grid-template-columns: 1fr; text-align: left; }
+    .tier-sub { text-align: left; max-width: none; }
+    .cat-row { grid-template-columns: 30px 1fr; }
+    .cat-status { grid-column: 2; margin-top: 6px; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+  <header>
+    <div class="kicker">Cartography · AI-Ready Codebase v2</div>
+    <h1 id="repo-title">레포 감사 대시보드</h1>
+    <div class="meta-line" id="meta-line"></div>
+  </header>
+
+  <section class="card hero">
+    <div>
+      <div class="hero-figure"><span id="hero-score">–</span><span class="max"> / <span id="hero-max">100</span></span></div>
+      <div class="hero-delta" id="hero-delta"></div>
+    </div>
+    <div class="hero-mid">
+      <div class="hero-label">AI-Readiness Score</div>
+      <div class="hero-meter-track"><div class="hero-meter-fill" id="hero-meter-fill"></div></div>
+    </div>
+    <div>
+      <span class="chip" id="tier-chip"><span class="dot"></span><span id="tier-chip-text"></span></span>
+      <div class="tier-sub" id="tier-label"></div>
+    </div>
+  </section>
+
+  <div class="section-title">카테고리별 점검 (A–G)</div>
+  <section class="card">
+    <div class="cat-list" id="cat-list"></div>
+  </section>
+
+  <div class="section-title">ROI 순 액션 리스트</div>
+  <section class="card">
+    <div class="table-scroll">
+      <table class="actions" id="actions-table">
+        <thead>
+          <tr>
+            <th style="width:32px">#</th>
+            <th style="width:64px">카테고리</th>
+            <th>액션</th>
+            <th style="width:70px">임팩트</th>
+            <th style="width:60px">공수</th>
+            <th style="width:60px">ROI</th>
+          </tr>
+        </thead>
+        <tbody id="actions-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer id="footer-line"></footer>
+
+</main>
+
+<script id="cartography-data" type="application/json">
+{
+  "meta": {
+    "skill": "cartography",
+    "rubricVersion": "ai-ready-codebase-v2",
+    "repoName": "music-transition",
+    "repoPath": ".",
+    "commit": "9bada03",
+    "auditedAt": "2026-08-28T09:30:00Z",
+    "auditor": "Claude Code"
+  },
+  "totalScore": 76,
+  "maxScore": 100,
+  "tier": {
+    "chip": "OPERATIONAL",
+    "label": "운용 가능 — 개선 여지는 있으나 실무 투입 가능",
+    "status": "good"
+  },
+  "previousScore": 71,
+  "delta": 5,
+  "categories": [
+    {
+      "code": "A",
+      "name": "Navigation",
+      "description": "에이전트가 이 레포에 처음 들어왔을 때 길을 잃지 않는가",
+      "maxPoints": 15,
+      "earnedPoints": 14,
+      "status": "good",
+      "criteria": [
+        {
+          "id": "A1",
+          "description": "최상위 진입점",
+          "maxPoints": 6,
+          "earnedPoints": 6,
+          "evidence": "CLAUDE.md 1~13번째 줄에 프로젝트 목적 한 줄 요약과 Phase별 '현재 상태' 표가 첫 화면에 바로 노출됨",
+          "gap": ""
+        },
+        {
+          "id": "A2",
+          "description": "디렉토리 구조 설명",
+          "maxPoints": 5,
+          "earnedPoints": 4,
+          "evidence": "CLAUDE.md에 chrome-extension/ 파일별 역할 주석이 달린 트리, spotify/README.md에 spotify/ 파일 목록이 문서화됨",
+          "gap": "레포 루트의 icons/ 디렉토리(빈 폴더)가 CLAUDE.md 어디에도 언급되지 않음 — 용도 불명"
+        },
+        {
+          "id": "A3",
+          "description": "네이밍의 자기설명성·일관성",
+          "maxPoints": 4,
+          "earnedPoints": 4,
+          "evidence": "lecture-detector.js / music-controller.js / service-worker.js 등 파일명이 역할을 그대로 드러내고, utils/helpers류의 모호한 이름이 레포 전체에 없음",
+          "gap": ""
+        }
+      ]
+    },
+    {
+      "code": "B",
+      "name": "Context Quality",
+      "description": "에이전트용 가이드 문서가 실제로 정확하고 밀도 있는가",
+      "maxPoints": 20,
+      "earnedPoints": 19,
+      "status": "good",
+      "criteria": [
+        {
+          "id": "B1",
+          "description": "에이전트 가이드 존재",
+          "maxPoints": 4,
+          "earnedPoints": 4,
+          "evidence": "레포 루트에 CLAUDE.md 존재(59줄)",
+          "gap": ""
+        },
+        {
+          "id": "B2",
+          "description": "정확성(drift 없음)",
+          "maxPoints": 6,
+          "earnedPoints": 6,
+          "evidence": "CLAUDE.md가 서술한 backend 공통 인터페이스(isConnected/connect/listDevices/play/pause)가 spotify/background/backends/music-backend.js의 JSDoc typedef와 정확히 일치. __xxxInstalled 중복 주입 방지 패턴도 lecture-detector.js:6, music-controller.js:7에서 실제로 그대로 쓰임 — 문서-코드 불일치 없음",
+          "gap": ""
+        },
+        {
+          "id": "B3",
+          "description": "\"왜\"의 설명",
+          "maxPoints": 6,
+          "earnedPoints": 6,
+          "evidence": "'설계 히스토리 / 왜 이렇게 됐는가' 섹션에서 macOS 네이티브 앱을 포기한 구체적 이유 3가지(MediaRemote 접근 제한, iPadOS API 부재, App Store entitlement 리스크)를 서술",
+          "gap": ""
+        },
+        {
+          "id": "B4",
+          "description": "개발 컨벤션 명시",
+          "maxPoints": 4,
+          "earnedPoints": 3,
+          "evidence": "'개발 컨벤션' 섹션에 코딩 스타일(순수 JS, 빌드 도구 없음, node --check), backend 인터페이스 규칙, 중복 주입 방지 패턴이 명시됨",
+          "gap": "커밋 메시지 규칙이나 브랜치 전략에 대한 언급은 없음"
+        }
+      ]
+    },
+    {
+      "code": "C",
+      "name": "Tribal Knowledge",
+      "description": "팀 머릿속에만 있던 지식이 문서로 외화됐는가",
+      "maxPoints": 20,
+      "earnedPoints": 13,
+      "status": "warning",
+      "criteria": [
+        {
+          "id": "C1",
+          "description": "알려진 제약/한계",
+          "maxPoints": 5,
+          "earnedPoints": 5,
+          "evidence": "CLAUDE.md와 chrome-extension/docs/SETUP.md 양쪽의 '알려진 제약' 섹션에 새로고침 시 재지정 필요, 유튜브 광고 오탐 디바운스 미구현, EME 사이트 동기화 이슈 3가지가 구체적으로 기재됨",
+          "gap": ""
+        },
+        {
+          "id": "C2",
+          "description": "설계 히스토리/의사결정 배경",
+          "maxPoints": 5,
+          "earnedPoints": 5,
+          "evidence": "'설계 히스토리' 섹션이 이전에 시도했다가 버린 접근(Swift 네이티브 앱 + AppleScript + MediaRemote)까지 포함해 서술",
+          "gap": ""
+        },
+        {
+          "id": "C3",
+          "description": "흔한 함정/트러블슈팅",
+          "maxPoints": 5,
+          "earnedPoints": 2,
+          "evidence": "'알려진 제약' 항목이 부분적으로 트러블슈팅 정보를 겸함",
+          "gap": "증상→원인→해결 형식의 별도 트러블슈팅/FAQ는 없음(예: popup.js의 errorBox에 뜨는 메시지별 대처법, chrome.scripting 권한 거부 시 대응 등)"
+        },
+        {
+          "id": "C4",
+          "description": "도메인 용어집",
+          "maxPoints": 5,
+          "earnedPoints": 1,
+          "evidence": "'강의 탭'/'음악 탭'/'backend contract' 같은 프로젝트 고유 용어가 문서 전반에서 반복 사용됨",
+          "gap": "이 용어들을 정의하는 별도 용어집 섹션이 없음 — 온보딩 에이전트가 문맥 추론에 의존해야 함"
+        }
+      ]
+    },
+    {
+      "code": "D",
+      "name": "Dependency Mapping",
+      "description": "모듈 의존 구조가 에이전트가 안전하게 수정할 수 있을 만큼 명확한가",
+      "maxPoints": 15,
+      "earnedPoints": 14,
+      "status": "good",
+      "criteria": [
+        {
+          "id": "D1",
+          "description": "순환 의존 부재",
+          "maxPoints": 6,
+          "earnedPoints": 6,
+          "evidence": "정적 분석 도구 없이 샘플링으로 확인 — spotify-backend.js는 config.js/pkce.js만 import하고, chrome-extension/ 쪽은 ES 모듈 import 없이 메시지 패싱으로만 결합됨. A→B→A 형태의 순환 없음",
+          "gap": ""
+        },
+        {
+          "id": "D2",
+          "description": "God file 부재",
+          "maxPoints": 5,
+          "earnedPoints": 4,
+          "evidence": "레포 최대 파일은 spotify/background/backends/spotify-backend.js(161줄)로 과도한 크기는 아님",
+          "gap": "spotify-backend.js가 OAuth 토큰 관리(refreshAccessToken/ensureValidAccessToken)와 Spotify API 호출(apiFetch/listDevices/play/pause)이라는 두 책임을 한 파일에 담고 있음 — god file 수준은 아니지만 분리 여지 있음"
+        },
+        {
+          "id": "D3",
+          "description": "모듈 경계·인터페이스 명시성",
+          "maxPoints": 4,
+          "earnedPoints": 4,
+          "evidence": "spotify/background/backends/music-backend.js가 JSDoc typedef로 backend 계약을 정의하고, spotify-backend.js가 '@type {import(...)}' 어노테이션으로 그 계약을 명시적으로 구현",
+          "gap": ""
+        }
+      ]
+    },
+    {
+      "code": "E",
+      "name": "Verification Gates",
+      "description": "에이전트가 만든 변경이 맞는지 틀린지 자동으로 검증할 수 있는가",
+      "maxPoints": 15,
+      "earnedPoints": 5,
+      "status": "critical",
+      "criteria": [
+        {
+          "id": "E1",
+          "description": "자동화 테스트",
+          "maxPoints": 6,
+          "earnedPoints": 0,
+          "evidence": "",
+          "gap": "테스트 파일/디렉토리가 레포 전체에 하나도 없음"
+        },
+        {
+          "id": "E2",
+          "description": "린트/타입체크",
+          "maxPoints": 5,
+          "earnedPoints": 5,
+          "evidence": "package.json + eslint.config.js(flat config) 추가, npm run lint로 실행. no-unused-vars/no-undef를 실제 오류를 주입해 스모크 테스트로 검증함(정상 코드는 통과, 미사용 변수·미선언 참조는 에러로 잡음). CLAUDE.md 개발 컨벤션 섹션에도 반영됨",
+          "gap": "아직 CI에 연결되지 않아 사람이 직접 npm run lint를 돌려야 강제됨(E3에서 해결 예정)"
+        },
+        {
+          "id": "E3",
+          "description": "CI 파이프라인 신뢰도",
+          "maxPoints": 4,
+          "earnedPoints": 0,
+          "evidence": "",
+          "gap": ".github/workflows/ 디렉토리 자체가 없음 — CI 파이프라인 부재"
+        }
+      ]
+    },
+    {
+      "code": "F",
+      "name": "Freshness",
+      "description": "문서와 코드 사이에 drift가 없는가, 마지막으로 언제 손봤는가",
+      "maxPoints": 10,
+      "earnedPoints": 7,
+      "status": "warning",
+      "criteria": [
+        {
+          "id": "F1",
+          "description": "문서·코드 최신성 격차",
+          "maxPoints": 5,
+          "earnedPoints": 5,
+          "evidence": "레포 전체가 단일 커밋(9bada03, 2026-08-28)에서 문서와 코드가 함께 작성됨 — 현재 시점 격차 없음",
+          "gap": ""
+        },
+        {
+          "id": "F2",
+          "description": "죽은 링크/방치된 잔재",
+          "maxPoints": 5,
+          "earnedPoints": 2,
+          "evidence": "",
+          "gap": "spotify/README.md:14가 레포 밖 개인 로컬 경로(/Users/kangmin/.claude/plans/radiant-gliding-corbato.md)를 Phase 2 재개 계획의 유일한 출처로 가리킴 — 다른 기기/사용자의 에이전트는 접근 불가한 사실상 죽은 참조. 루트의 icons/ 디렉토리도 용도 미상인 채 방치됨"
+        }
+      ]
+    },
+    {
+      "code": "G",
+      "name": "Agent Outcomes",
+      "description": "실제 에이전트 세션이 첫 시도에 성공하는 비율 — 결과 측 점검",
+      "maxPoints": 5,
+      "earnedPoints": 4,
+      "status": "good",
+      "criteria": [
+        {
+          "id": "G1",
+          "description": "결과 프록시",
+          "maxPoints": 5,
+          "earnedPoints": 4,
+          "evidence": "커밋이 1개뿐이라 revert/rework 패턴을 직접 관측할 로그가 없음. A~F 카테고리의 가중평균 달성률(67/95 ≈ 70.5%)로 대체 추정",
+          "gap": "직접적인 에이전트 세션 성공/실패 로그가 없음 — 실제 사용 중 에이전트가 자주 헤맨 지점이 있다면 다음 감사에 반영 가능",
+          "confidence": "low"
+        }
+      ]
+    }
+  ],
+  "actionList": [
+    {
+      "rank": 1,
+      "category": "C",
+      "action": "CLAUDE.md에 '용어집' 섹션 추가 — 강의 탭 / 음악 탭 / backend contract 등 정의",
+      "rationale": "온보딩 에이전트가 문맥 추론만으로 프로젝트 고유 용어를 파악해야 함",
+      "impact": 4,
+      "effort": "S",
+      "roi": 4.0
+    },
+    {
+      "rank": 2,
+      "category": "E",
+      "action": ".github/workflows/ci.yml 추가 — npm run lint(+ node --check)를 PR마다 자동 실행",
+      "rationale": "린트 설정은 생겼지만 아직 CI에 연결되지 않아 사람이 직접 돌려야 강제됨",
+      "impact": 4,
+      "effort": "S",
+      "roi": 4.0
+    },
+    {
+      "rank": 3,
+      "category": "C",
+      "action": "chrome-extension/docs/SETUP.md 또는 새 TROUBLESHOOTING.md에 증상→원인→해결 형식의 트러블슈팅 항목 추가",
+      "rationale": "현재 '알려진 제약'만 있고 실제 에러 메시지별 대응법은 없음",
+      "impact": 3,
+      "effort": "S",
+      "roi": 3.0
+    },
+    {
+      "rank": 4,
+      "category": "F",
+      "action": "spotify/README.md:14의 개인 로컬 경로 참조를 제거하고 그 계획 내용을 레포 안 문서로 옮기기, 빈 icons/ 디렉토리는 삭제하거나 용도 명시",
+      "rationale": "레포 밖 개인 경로는 다른 환경의 에이전트가 접근할 수 없는 사실상 죽은 참조",
+      "impact": 3,
+      "effort": "S",
+      "roi": 3.0
+    },
+    {
+      "rank": 5,
+      "category": "E",
+      "action": "service-worker.js의 handleMessage처럼 순수 로직을 분리해 chrome.* API를 모킹한 최소 스모크 테스트 추가",
+      "rationale": "테스트가 전무해 에이전트가 만든 변경의 회귀 여부를 자동으로 확인할 수 없음",
+      "impact": 6,
+      "effort": "M",
+      "roi": 2.0
+    },
+    {
+      "rank": 6,
+      "category": "A",
+      "action": "icons/ 디렉토리를 CLAUDE.md 파일 트리에 추가하거나(용도가 생기기 전까지) 삭제",
+      "rationale": "설명 없는 빈 디렉토리는 에이전트에게 불필요한 탐색 비용을 유발",
+      "impact": 1,
+      "effort": "S",
+      "roi": 1.0
+    },
+    {
+      "rank": 7,
+      "category": "D",
+      "action": "spotify-backend.js를 토큰 관리(auth)와 API 호출(client) 두 파일로 분리",
+      "rationale": "한 파일이 두 책임을 겸하고 있어 향후 커질수록 god file화 위험",
+      "impact": 1,
+      "effort": "M",
+      "roi": 0.3
+    }
+  ]
+}
+</script>
+
+<script>
+(function () {
+  var DATA = JSON.parse(document.getElementById('cartography-data').textContent);
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined && text !== null) e.textContent = text;
+    return e;
+  }
+
+  function statusColorVar(status) {
+    if (status === 'good') return 'var(--status-good)';
+    if (status === 'warning') return 'var(--status-warning)';
+    return 'var(--status-critical)';
+  }
+  function statusGlyph(status) {
+    if (status === 'good') return '●';
+    if (status === 'warning') return '▲';
+    return '■';
+  }
+  function statusLabel(status) {
+    if (status === 'good') return '양호';
+    if (status === 'warning') return '주의';
+    return '위험';
+  }
+
+  // Header
+  document.title = 'AI-Readiness Cartography · ' + (DATA.meta.repoName || '');
+  document.getElementById('repo-title').textContent = (DATA.meta.repoName || '레포') + ' — AI-Readiness 감사';
+  var metaParts = [];
+  if (DATA.meta.auditedAt) metaParts.push('감사일 ' + DATA.meta.auditedAt.slice(0, 10));
+  if (DATA.meta.commit) metaParts.push('commit ' + DATA.meta.commit.slice(0, 7));
+  metaParts.push('루브릭 ' + DATA.meta.rubricVersion);
+  document.getElementById('meta-line').textContent = metaParts.join(' · ');
+
+  // Hero
+  document.getElementById('hero-score').textContent = DATA.totalScore;
+  document.getElementById('hero-max').textContent = DATA.maxScore;
+  var heroPct = Math.max(0, Math.min(100, (DATA.totalScore / DATA.maxScore) * 100));
+  var heroFill = document.getElementById('hero-meter-fill');
+  heroFill.style.width = heroPct + '%';
+  heroFill.style.background = statusColorVar(DATA.tier.status);
+
+  if (typeof DATA.delta === 'number') {
+    var d = document.getElementById('hero-delta');
+    var sign = DATA.delta > 0 ? '+' : '';
+    d.textContent = sign + DATA.delta + '점 (직전 감사 대비)';
+    d.className = 'hero-delta ' + (DATA.delta > 0 ? 'up' : (DATA.delta < 0 ? 'down' : ''));
+  }
+
+  var chip = document.getElementById('tier-chip');
+  chip.classList.add(DATA.tier.status);
+  document.getElementById('tier-chip-text').textContent = DATA.tier.chip;
+  document.getElementById('tier-label').textContent = DATA.tier.label;
+
+  // Categories
+  var catList = document.getElementById('cat-list');
+  (DATA.categories || []).forEach(function (cat) {
+    var row = el('div', 'cat-row');
+    row.appendChild(el('div', 'cat-code', cat.code));
+
+    var main = el('div', 'cat-main');
+    var nameLine = el('div', 'cat-name-line');
+    nameLine.appendChild(el('span', null, cat.name));
+    nameLine.appendChild(el('span', 'pts', cat.earnedPoints + ' / ' + cat.maxPoints));
+    main.appendChild(nameLine);
+
+    var track = el('div', 'cat-track');
+    var fill = el('div', 'cat-fill');
+    var pct = Math.max(0, Math.min(100, (cat.earnedPoints / cat.maxPoints) * 100));
+    fill.style.width = pct + '%';
+    fill.style.background = statusColorVar(cat.status);
+    track.appendChild(fill);
+    main.appendChild(track);
+    row.appendChild(main);
+
+    var statusEl = el('div', 'cat-status ' + cat.status);
+    statusEl.appendChild(el('span', 'glyph', statusGlyph(cat.status)));
+    statusEl.appendChild(document.createTextNode(statusLabel(cat.status)));
+    row.appendChild(statusEl);
+
+    if (cat.criteria && cat.criteria.length) {
+      var details = el('details', 'cat-details');
+      var summary = el('summary', null, '근거 ' + cat.criteria.length + '개 보기');
+      details.appendChild(summary);
+      cat.criteria.forEach(function (c) {
+        var block = el('div', 'criterion');
+        var head = el('div', 'c-head');
+        head.appendChild(el('span', null, c.id + ' · ' + c.description));
+        head.appendChild(el('span', 'c-pts', c.earnedPoints + '/' + c.maxPoints));
+        block.appendChild(head);
+        if (c.evidence) block.appendChild(el('div', 'c-evidence', '근거: ' + c.evidence));
+        if (c.gap) block.appendChild(el('div', 'c-gap', '갭: ' + c.gap));
+        if (c.confidence) block.appendChild(el('div', 'c-confidence', '신뢰도: ' + c.confidence));
+        details.appendChild(block);
+      });
+      row.appendChild(details);
+    }
+
+    catList.appendChild(row);
+  });
+
+  // Action list
+  var body = document.getElementById('actions-body');
+  (DATA.actionList || []).forEach(function (a) {
+    var tr = document.createElement('tr');
+
+    var tdRank = el('td', 'num');
+    tdRank.appendChild(el('span', 'rank-badge', a.rank));
+    tr.appendChild(tdRank);
+
+    var tdCat = document.createElement('td');
+    tdCat.appendChild(el('span', 'cat-tag', a.category));
+    tr.appendChild(tdCat);
+
+    var tdAction = document.createElement('td');
+    tdAction.appendChild(el('div', null, a.action));
+    if (a.rationale) tdAction.appendChild(el('div', 'action-rationale', a.rationale));
+    tr.appendChild(tdAction);
+
+    tr.appendChild(el('td', 'num', '+' + a.impact));
+    var tdEffort = el('td', 'num');
+    tdEffort.appendChild(el('span', 'effort-tag', a.effort));
+    tr.appendChild(tdEffort);
+    tr.appendChild(el('td', 'num', a.roi));
+
+    body.appendChild(tr);
+  });
+
+  document.getElementById('footer-line').textContent =
+    'Generated by the cartography skill · ' + DATA.meta.rubricVersion + ' · ' + (DATA.meta.auditor || 'Claude Code');
+})();
+</script>
+
+</body>
+</html>

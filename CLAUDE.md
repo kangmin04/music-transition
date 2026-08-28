@@ -55,5 +55,6 @@ Spotify 말고 Apple Music 등 다른 앱도 지원하려는 단계. Spotify 같
 ## 개발 컨벤션
 
 - 순수 JavaScript(Manifest V3), 빌드 도구 없음. `node --check <file>`로 문법만 확인.
+- `npm run lint`(ESLint flat config, `eslint.config.js`)로 미사용 변수·미선언 전역 참조 등을 검사. `package.json`의 devDependencies 설치 필요(`npm install`).
 - 각 backend(Spotify, 향후 ntfy)는 `music-backend.js`에 정의된 공통 인터페이스(`isConnected/connect/listDevices/play/pause`)를 따르도록 설계 — 나중에 백엔드를 스위칭 가능한 구조로 합치는 게 목표.
 - 콘텐츠 스크립트는 `window.__xxxInstalled` 플래그로 중복 주입 방지.
