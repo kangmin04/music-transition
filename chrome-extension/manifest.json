@@ -10,5 +10,14 @@
   },
   "action": {
     "default_popup": "popup/popup.html"
+  },
+  "commands": {
+    "real-stop": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+M",
+        "mac": "Command+Shift+M"
+      },
+      "description": "학습 종료 (음악 자동 재생 중단)"
+    }
   }
 }

@@ -19,19 +19,22 @@ Manifest V3 확장. 사용자가 브라우저에서 "강의 탭"과 "음악 탭"
 ```
 chrome-extension/
 ├── manifest.json
-├── background/service-worker.js   # 강의 탭 pause/play 메시지를 음악 탭 명령으로 라우팅
+├── background/service-worker.js       # 강의 탭 pause/play 메시지를 음악 탭 명령으로 라우팅, "학습 종료" 상태 관리
 ├── content/
-│   ├── lecture-detector.js        # 강의 탭에 주입: <video> pause/play 이벤트 구독
-│   └── music-controller.js        # 음악 탭에 주입: play/pause/volume 명령 수행
-├── popup/                         # 탭 지정 버튼, 볼륨 슬라이더
-└── docs/SETUP.md                  # 로컬 로드·테스트 방법
+│   ├── lecture-detector.js            # 강의 탭에 주입: <video> pause/play 이벤트 구독(400ms 디바운스)
+│   ├── music-controller.js            # 음악 탭에 격리된 월드로 주입: play/pause 명령 수행, 볼륨 명령은 music-volume-lock.js로 위임
+│   └── music-volume-lock.js           # 음악 탭에 MAIN 월드로 주입: <video>.volume의 setter를 가로채 사이트가 볼륨을 되돌리는 걸 막음
+├── popup/                             # 탭 지정 버튼, 볼륨 슬라이더, "학습 종료" 버튼
+└── docs/SETUP.md                      # 로컬 로드·테스트 방법
 ```
 
-콘텐츠 스크립트는 manifest에 정적으로 선언하지 않고, 팝업에서 사용자가 탭을 지정하는 순간 `chrome.scripting.executeScript`로 그 탭에만 주입함(`activeTab` 권한 기반) — 광범위한 `host_permissions` 없이 동작하도록 한 설계 선택.
+콘텐츠 스크립트는 manifest에 정적으로 선언하지 않고, 팝업에서 사용자가 탭을 지정하는 순간 `chrome.scripting.executeScript`로 그 탭에만 주입함(`activeTab` 권한 기반) — 광범위한 `host_permissions` 없이 동작하도록 한 설계 선택. 음악 탭 쪽은 스크립트 두 개를 서로 다른 JS 월드에 주입함: `Object.defineProperty`로 `.volume`의 setter를 가로채는 트릭은 그 트릭을 건 월드에서만 유효하므로, 페이지 자체 스크립트(메인 월드)가 볼륨을 되돌리는 걸 막으려면 `music-volume-lock.js`를 반드시 `world: "MAIN"`으로 주입해야 함 — 메인 월드에서는 `chrome.runtime` 메시징을 쓸 수 없어 두 스크립트는 `window.postMessage`로 통신함(`popup/popup.js`의 `injectAndAssign` 참고).
+
+**"학습 종료"(실제 중단)**: 필기 때문에 잠깐 pause한 것과 진짜로 공부를 끝낸 것을 구분하기 위한 기능. 팝업의 "학습 종료" 버튼 또는 단축키(`Ctrl+Shift+M`/맥 `Cmd+Shift+M`, manifest의 `commands.real-stop`)를 실행하면 음악을 즉시 멈추고 `realStopActive` 플래그를 켬 — 켜져 있는 동안은 강의 탭에서 오는 pause 신호를 무시하다가, 강의가 다시 재생되면 자동으로 해제됨(`service-worker.js`의 `realStop()`과 `LECTURE_STATE` 핸들러).
 
 **테스트**: `chrome-extension/docs/SETUP.md` 참고. `chrome://extensions` → 개발자 모드 → 압축해제된 확장 프로그램 로드 → `chrome-extension/` 폴더 선택.
 
-**알려진 제약**: 음악 탭을 새로고침하면 주입된 스크립트가 날아가서 재지정 필요. 유튜브 광고로 인한 pause/play 오탐에 대한 디바운스 미구현. Spotify Web Player처럼 EME(DRM)가 관여하는 사이트는 `video.pause()/.play()`가 내부 UI와 어긋날 수 있음(필요시 버튼 클릭 시뮬레이션으로 보강 예정).
+**알려진 제약**: 음악 탭을 새로고침하면 주입된 스크립트가 날아가서 재지정 필요. 강의 영상 시크 중 짧은 pause/play 오탐은 400ms 디바운스로 걸러지지만, 유튜브 광고 전환처럼 그보다 오래 지속되는 pause는 여전히 음악 재생을 유발할 수 있음. Spotify Web Player처럼 EME(DRM)가 관여하는 사이트는 `video.pause()/.play()`가 내부 UI와 어긋날 수 있음(필요시 버튼 클릭 시뮬레이션으로 보강 예정).
 
 ## Phase 2 — `spotify/` (보류 중)
 
@@ -58,3 +61,4 @@ Spotify 말고 Apple Music 등 다른 앱도 지원하려는 단계. Spotify 같
 - `npm run lint`(ESLint flat config, `eslint.config.js`)로 미사용 변수·미선언 전역 참조 등을 검사. `package.json`의 devDependencies 설치 필요(`npm install`).
 - 각 backend(Spotify, 향후 ntfy)는 `music-backend.js`에 정의된 공통 인터페이스(`isConnected/connect/listDevices/play/pause`)를 따르도록 설계 — 나중에 백엔드를 스위칭 가능한 구조로 합치는 게 목표.
 - 콘텐츠 스크립트는 `window.__xxxInstalled` 플래그로 중복 주입 방지.
+- 이 레포에서 실제로 부딪힌 함정(사이트의 볼륨 되돌림, 시크 중 가짜 pause/play 등)과 툴링 메모는 `.claude/learnings/`(`INDEX.md`부터)에 쌓아둠 — 관련 코드를 만지기 전에 먼저 확인.

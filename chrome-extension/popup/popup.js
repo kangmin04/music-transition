@@ -79,10 +79,17 @@ async function getLiveTabTitle(tabId, fallbackTitle) {
   }
 }
 
+function setRealStopBadge(el, active) {
+  el.textContent = active ? "실제 중단됨" : "꺼짐";
+  el.classList.toggle("badge-on", active);
+  el.classList.toggle("badge-off", !active);
+}
+
 async function refreshStatus() {
   const { settings } = await send({ type: "GET_SETTINGS" });
   setBadge($("lectureTabStatus"), settings.lectureTabId);
   setBadge($("musicTabStatus"), settings.musicTabId);
+  setRealStopBadge($("realStopStatus"), settings.realStopActive);
   setHint(
     $("lectureHint"),
     await getLiveTabTitle(settings.lectureTabId, settings.lectureTabTitle),
@@ -136,6 +143,16 @@ $("musicVolumeSlider").addEventListener("input", async (e) => {
       type: "SET_MUSIC_VOLUME",
       volumePercent: Number(e.target.value),
     });
+  } catch (err) {
+    showError(err);
+  }
+});
+
+$("realStopBtn").addEventListener("click", async () => {
+  try {
+    showError(null);
+    await send({ type: "REAL_STOP" });
+    await refreshStatus();
   } catch (err) {
     showError(err);
   }

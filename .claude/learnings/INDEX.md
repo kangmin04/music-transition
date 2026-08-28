@@ -2,3 +2,6 @@
 - [Chrome 확장 프로그램 API](chrome-extension-apis.md) — runtime/tabs 메시징, activeTab vs tabs 권한, MV3 서비스워커 특성, 그 외 유용한 API
 - [웹 미디어 볼륨 되돌림 문제](html-media-volume-override.md) — 사이트가 볼륨을 되돌리는 원리, GainNode 함정, 감시자 패턴과 tabCapture 대안
 - [HTML5 시크 중 가짜 pause/play](html5-media-seek-pause-events.md) — 시크가 pause/play 이벤트를 유발하는 이유와 디바운스 대응
+- [격리된 세계 vs 메인 세계](chrome-isolated-vs-main-world.md) — defineProperty가 세계를 못 넘는 이유, postMessage 다리, worker/iframe/RSC로 전이되는 패턴
+- [큰 변경 전 값싼 검증](debugging-verify-before-big-changes.md) — tabCapture로 안 바꾸고 실측으로 먼저 검증해 시간 아낀 사례
+- [JS Object 메서드 모음](javascript-object-methods.md) — getOwnPropertyDescriptor/defineProperty/keys/스프레드를 언제·왜 쓰는지, 이 프로젝트 실제 예시로

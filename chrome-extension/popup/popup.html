@@ -59,6 +59,20 @@
       </div>
     </section>
 
+    <section class="group">
+      <h2>실제 중단</h2>
+      <p class="hint">
+        필기 때문에 잠깐 멈춘 게 아니라 진짜로 학습을 끝냈다면 눌러주세요.
+        음악이 즉시 멈추고, 강의를 다시 재생하기 전까진 pause해도 음악이
+        다시 켜지지 않습니다. 단축키로도 실행할 수 있습니다
+        (chrome://extensions/shortcuts 에서 확인·변경 가능).
+      </p>
+      <div class="row">
+        <button id="realStopBtn">학습 종료 (음악 끄기)</button>
+        <span id="realStopStatus" class="badge">꺼짐</span>
+      </div>
+    </section>
+
     <p id="errorBox" class="error"></p>
 
     <script src="popup.js" type="module"></script>

@@ -4,19 +4,19 @@
     "rubricVersion": "ai-ready-codebase-v2",
     "repoName": "music-transition",
     "repoPath": ".",
-    "commit": "9bada03",
-    "auditedAt": "2026-08-28T09:30:00Z",
+    "commit": "504719d (+ uncommitted chrome-extension/.claude/learnings changes)",
+    "auditedAt": "2026-08-28T15:00:00Z",
     "auditor": "Claude Code"
   },
-  "totalScore": 76,
+  "totalScore": 72,
   "maxScore": 100,
   "tier": {
     "chip": "OPERATIONAL",
     "label": "운용 가능 — 개선 여지는 있으나 실무 투입 가능",
     "status": "good"
   },
-  "previousScore": 71,
-  "delta": 5,
+  "previousScore": 76,
+  "delta": -4,
   "categories": [
     {
       "code": "A",
@@ -31,7 +31,7 @@
           "description": "최상위 진입점",
           "maxPoints": 6,
           "earnedPoints": 6,
-          "evidence": "CLAUDE.md 1~13번째 줄에 프로젝트 목적 한 줄 요약과 Phase별 '현재 상태' 표가 첫 화면에 바로 노출됨",
+          "evidence": "CLAUDE.md 1~13번째 줄에 프로젝트 목적 한 줄 요약과 Phase별 '현재 상태' 표가 첫 화면에 바로 노출됨 — 이전 감사 이후 변경 없음",
           "gap": ""
         },
         {
@@ -39,15 +39,15 @@
           "description": "디렉토리 구조 설명",
           "maxPoints": 5,
           "earnedPoints": 4,
-          "evidence": "CLAUDE.md에 chrome-extension/ 파일별 역할 주석이 달린 트리, spotify/README.md에 spotify/ 파일 목록이 문서화됨",
-          "gap": "레포 루트의 icons/ 디렉토리(빈 폴더)가 CLAUDE.md 어디에도 언급되지 않음 — 용도 불명"
+          "evidence": "CLAUDE.md에 chrome-extension/ 파일별 역할이 달린 트리, spotify/README.md에 spotify/ 파일 목록이 문서화됨",
+          "gap": "레포 루트의 icons/(빈 폴더)와 .claude/learnings/(이번에 새로 채워진 지식 노트 디렉토리) 둘 다 CLAUDE.md 디렉토리 표에 없음 — 후자는 이번 감사에서 새로 발견된 사각지대"
         },
         {
           "id": "A3",
           "description": "네이밍의 자기설명성·일관성",
           "maxPoints": 4,
           "earnedPoints": 4,
-          "evidence": "lecture-detector.js / music-controller.js / service-worker.js 등 파일명이 역할을 그대로 드러내고, utils/helpers류의 모호한 이름이 레포 전체에 없음",
+          "evidence": "이번에 새로 추가된 setBadge/setHint/getLiveTabTitle(popup.js), lockVolume/nativeVolume(music-controller.js) 같은 함수명도 역할이 이름에서 바로 드러남 — 네이밍 컨벤션 유지됨",
           "gap": ""
         }
       ]
@@ -57,7 +57,7 @@
       "name": "Context Quality",
       "description": "에이전트용 가이드 문서가 실제로 정확하고 밀도 있는가",
       "maxPoints": 20,
-      "earnedPoints": 19,
+      "earnedPoints": 16,
       "status": "good",
       "criteria": [
         {
@@ -65,32 +65,32 @@
           "description": "에이전트 가이드 존재",
           "maxPoints": 4,
           "earnedPoints": 4,
-          "evidence": "레포 루트에 CLAUDE.md 존재(59줄)",
+          "evidence": "레포 루트에 CLAUDE.md 존재(60줄)",
           "gap": ""
         },
         {
           "id": "B2",
           "description": "정확성(drift 없음)",
           "maxPoints": 6,
-          "earnedPoints": 6,
-          "evidence": "CLAUDE.md가 서술한 backend 공통 인터페이스(isConnected/connect/listDevices/play/pause)가 spotify/background/backends/music-backend.js의 JSDoc typedef와 정확히 일치. __xxxInstalled 중복 주입 방지 패턴도 lecture-detector.js:6, music-controller.js:7에서 실제로 그대로 쓰임 — 문서-코드 불일치 없음",
-          "gap": ""
+          "earnedPoints": 4,
+          "evidence": "backend 공통 인터페이스, __xxxInstalled 중복 주입 방지 패턴 등 대부분의 서술은 여전히 코드와 일치",
+          "gap": "CLAUDE.md '알려진 제약'이 '유튜브 광고로 인한 pause/play 오탐에 대한 디바운스 미구현'이라고 서술하지만, chrome-extension/content/lecture-detector.js:13(PAUSE_DEBOUNCE_MS = 400)에는 이미 400ms 디바운스가 구현돼 있음. 같은 레포의 chrome-extension/docs/SETUP.md는 이미 이 사실을 반영해 갱신됐는데(대응하는 항목이 '시크 중 오탐은 디바운스로 걸러짐'으로 수정됨) CLAUDE.md만 따라가지 못해 문서 간 내부 불일치가 생김"
         },
         {
           "id": "B3",
           "description": "\"왜\"의 설명",
           "maxPoints": 6,
-          "earnedPoints": 6,
-          "evidence": "'설계 히스토리 / 왜 이렇게 됐는가' 섹션에서 macOS 네이티브 앱을 포기한 구체적 이유 3가지(MediaRemote 접근 제한, iPadOS API 부재, App Store entitlement 리스크)를 서술",
-          "gap": ""
+          "earnedPoints": 5,
+          "evidence": "'설계 히스토리 / 왜 이렇게 됐는가' 섹션은 여전히 macOS 네이티브 앱을 포기한 구체적 이유 3가지를 서술",
+          "gap": "chrome-extension/content/music-controller.js에 새로 도입된 Object.defineProperty 기반 볼륨 락(사이트가 자기 볼륨으로 되돌리는 걸 사전 차단해 스터터링을 막는 방식)의 '왜'가 코드 주석에만 있고 CLAUDE.md에는 반영되지 않음"
         },
         {
           "id": "B4",
           "description": "개발 컨벤션 명시",
           "maxPoints": 4,
           "earnedPoints": 3,
-          "evidence": "'개발 컨벤션' 섹션에 코딩 스타일(순수 JS, 빌드 도구 없음, node --check), backend 인터페이스 규칙, 중복 주입 방지 패턴이 명시됨",
-          "gap": "커밋 메시지 규칙이나 브랜치 전략에 대한 언급은 없음"
+          "evidence": "'개발 컨벤션' 섹션에 코딩 스타일, backend 인터페이스 규칙, 중복 주입 방지 패턴이 명시됨",
+          "gap": "커밋 메시지 규칙이나 브랜치 전략 언급 없음(이전과 동일). .claude/learnings/ 노트를 언제/왜 참고해야 하는지도 컨벤션 섹션에 없음"
         }
       ]
     },
@@ -99,7 +99,7 @@
       "name": "Tribal Knowledge",
       "description": "팀 머릿속에만 있던 지식이 문서로 외화됐는가",
       "maxPoints": 20,
-      "earnedPoints": 13,
+      "earnedPoints": 15,
       "status": "warning",
       "criteria": [
         {
@@ -107,7 +107,7 @@
           "description": "알려진 제약/한계",
           "maxPoints": 5,
           "earnedPoints": 5,
-          "evidence": "CLAUDE.md와 chrome-extension/docs/SETUP.md 양쪽의 '알려진 제약' 섹션에 새로고침 시 재지정 필요, 유튜브 광고 오탐 디바운스 미구현, EME 사이트 동기화 이슈 3가지가 구체적으로 기재됨",
+          "evidence": "chrome-extension/docs/SETUP.md의 '알려진 제약' 항목이 갱신되어, 디바운스로 해결된 부분과 여전히 남은 부분(400ms보다 오래 지속되는 광고 pause)을 구분해 서술 — 이전 감사 시점보다 더 정밀해짐",
           "gap": ""
         },
         {
@@ -115,16 +115,16 @@
           "description": "설계 히스토리/의사결정 배경",
           "maxPoints": 5,
           "earnedPoints": 5,
-          "evidence": "'설계 히스토리' 섹션이 이전에 시도했다가 버린 접근(Swift 네이티브 앱 + AppleScript + MediaRemote)까지 포함해 서술",
+          "evidence": "CLAUDE.md '설계 히스토리' 섹션 변경 없이 유지 — 이전에 시도했다가 버린 Swift 네이티브 앱 접근까지 서술",
           "gap": ""
         },
         {
           "id": "C3",
           "description": "흔한 함정/트러블슈팅",
           "maxPoints": 5,
-          "earnedPoints": 2,
-          "evidence": "'알려진 제약' 항목이 부분적으로 트러블슈팅 정보를 겸함",
-          "gap": "증상→원인→해결 형식의 별도 트러블슈팅/FAQ는 없음(예: popup.js의 errorBox에 뜨는 메시지별 대처법, chrome.scripting 권한 거부 시 대응 등)"
+          "earnedPoints": 4,
+          "evidence": ".claude/learnings/html-media-volume-override.md(사이트가 볼륨을 되돌리는 원리, GainNode 함정, 감시자 패턴과 tabCapture 대안)와 .claude/learnings/html5-media-seek-pause-events.md(시크 중 가짜 pause/play가 발생하는 이유와 디바운스 대응)가 이 레포에서 실제로 부딪힌 함정을 증상→원인→해결 형식으로 문서화함 — 이전 감사의 1순위 액션이 그대로 이행된 사례",
+          "gap": "CLAUDE.md나 SETUP.md 어디에도 .claude/learnings/를 참고하라는 안내가 없어 발견성이 낮음. popup.js의 errorBox에 뜨는 에러 메시지별 대응법은 여전히 없음"
         },
         {
           "id": "C4",
@@ -132,7 +132,7 @@
           "maxPoints": 5,
           "earnedPoints": 1,
           "evidence": "'강의 탭'/'음악 탭'/'backend contract' 같은 프로젝트 고유 용어가 문서 전반에서 반복 사용됨",
-          "gap": "이 용어들을 정의하는 별도 용어집 섹션이 없음 — 온보딩 에이전트가 문맥 추론에 의존해야 함"
+          "gap": "이 용어들을 정의하는 별도 용어집 섹션이 없음 — 이전과 동일"
         }
       ]
     },
@@ -149,7 +149,7 @@
           "description": "순환 의존 부재",
           "maxPoints": 6,
           "earnedPoints": 6,
-          "evidence": "정적 분석 도구 없이 샘플링으로 확인 — spotify-backend.js는 config.js/pkce.js만 import하고, chrome-extension/ 쪽은 ES 모듈 import 없이 메시지 패싱으로만 결합됨. A→B→A 형태의 순환 없음",
+          "evidence": "정적 분석 도구 없이 샘플링으로 확인 — 워킹트리 diff를 포함해도 import 그래프에 변화 없음(chrome-extension/content/*는 여전히 ES 모듈 import 없이 메시지 패싱으로만 결합, spotify-backend.js는 config.js/pkce.js만 import)",
           "gap": ""
         },
         {
@@ -157,15 +157,15 @@
           "description": "God file 부재",
           "maxPoints": 5,
           "earnedPoints": 4,
-          "evidence": "레포 최대 파일은 spotify/background/backends/spotify-backend.js(161줄)로 과도한 크기는 아님",
-          "gap": "spotify-backend.js가 OAuth 토큰 관리(refreshAccessToken/ensureValidAccessToken)와 Spotify API 호출(apiFetch/listDevices/play/pause)이라는 두 책임을 한 파일에 담고 있음 — god file 수준은 아니지만 분리 여지 있음"
+          "evidence": "레포 최대 파일은 여전히 spotify/background/backends/spotify-backend.js(181줄). chrome-extension 쪽 최대는 service-worker.js(147줄, 이전 대비 66줄 늘었지만 god file 수준은 아님)",
+          "gap": "spotify-backend.js가 OAuth 토큰 관리와 Spotify API 호출 두 책임을 한 파일에 담고 있음 — 이전과 동일한 gap"
         },
         {
           "id": "D3",
           "description": "모듈 경계·인터페이스 명시성",
           "maxPoints": 4,
           "earnedPoints": 4,
-          "evidence": "spotify/background/backends/music-backend.js가 JSDoc typedef로 backend 계약을 정의하고, spotify-backend.js가 '@type {import(...)}' 어노테이션으로 그 계약을 명시적으로 구현",
+          "evidence": "spotify/background/backends/music-backend.js가 JSDoc typedef로 backend 계약을 정의하고 spotify-backend.js가 '@type {import(...)}' 어노테이션으로 명시적으로 구현 — 변경 없음",
           "gap": ""
         }
       ]
@@ -184,15 +184,15 @@
           "maxPoints": 6,
           "earnedPoints": 0,
           "evidence": "",
-          "gap": "테스트 파일/디렉토리가 레포 전체에 하나도 없음"
+          "gap": "테스트 파일/디렉토리가 레포 전체에 여전히 하나도 없음(*.test.js/*.spec.js/test·tests·__tests__ 디렉토리 전부 0건, 워킹트리 변경 포함해도 동일)"
         },
         {
           "id": "E2",
           "description": "린트/타입체크",
           "maxPoints": 5,
           "earnedPoints": 5,
-          "evidence": "package.json + eslint.config.js(flat config) 추가, npm run lint로 실행. no-unused-vars/no-undef를 실제 오류를 주입해 스모크 테스트로 검증함(정상 코드는 통과, 미사용 변수·미선언 참조는 에러로 잡음). CLAUDE.md 개발 컨벤션 섹션에도 반영됨",
-          "gap": "아직 CI에 연결되지 않아 사람이 직접 npm run lint를 돌려야 강제됨(E3에서 해결 예정)"
+          "evidence": "package.json에 lint/format/format:check 3개 스크립트, eslint.config.js flat config(no-unused-vars/no-undef/eqeqeq 등) 유지 — 변경 없음",
+          "gap": "CI에 아직 연결되지 않아 사람이 직접 npm run lint를 돌려야 강제됨(E3에서 다룸)"
         },
         {
           "id": "E3",
@@ -200,7 +200,7 @@
           "maxPoints": 4,
           "earnedPoints": 0,
           "evidence": "",
-          "gap": ".github/workflows/ 디렉토리 자체가 없음 — CI 파이프라인 부재"
+          "gap": ".github/workflows/ 디렉토리 자체가 여전히 없음 — CI 파이프라인 부재"
         }
       ]
     },
@@ -209,16 +209,16 @@
       "name": "Freshness",
       "description": "문서와 코드 사이에 drift가 없는가, 마지막으로 언제 손봤는가",
       "maxPoints": 10,
-      "earnedPoints": 7,
-      "status": "warning",
+      "earnedPoints": 4,
+      "status": "critical",
       "criteria": [
         {
           "id": "F1",
           "description": "문서·코드 최신성 격차",
           "maxPoints": 5,
-          "earnedPoints": 5,
-          "evidence": "레포 전체가 단일 커밋(9bada03, 2026-08-28)에서 문서와 코드가 함께 작성됨 — 현재 시점 격차 없음",
-          "gap": ""
+          "earnedPoints": 2,
+          "evidence": "chrome-extension/docs/SETUP.md는 워킹트리 코드 변경(디바운스 구현)을 따라 이미 갱신됐음(git diff로 확인)",
+          "gap": "같은 내용을 요약하는 CLAUDE.md는 초기 커밋 이후 손대지 않아 코드보다 뒤처짐 — B2와 동일 근거. 레포 안에서도 문서 간 최신성이 갈린 사례"
         },
         {
           "id": "F2",
@@ -226,7 +226,7 @@
           "maxPoints": 5,
           "earnedPoints": 2,
           "evidence": "",
-          "gap": "spotify/README.md:14가 레포 밖 개인 로컬 경로(/Users/kangmin/.claude/plans/radiant-gliding-corbato.md)를 Phase 2 재개 계획의 유일한 출처로 가리킴 — 다른 기기/사용자의 에이전트는 접근 불가한 사실상 죽은 참조. 루트의 icons/ 디렉토리도 용도 미상인 채 방치됨"
+          "gap": "spotify/README.md:14가 레포 밖 개인 로컬 경로(/Users/kangmin/.claude/plans/radiant-gliding-corbato.md)를 유일한 참고로 가리킴 — 다른 환경의 에이전트는 접근 불가. 루트의 icons/ 디렉토리도 여전히 용도 미상인 채 방치(이전과 동일)"
         }
       ]
     },
@@ -243,7 +243,7 @@
           "description": "결과 프록시",
           "maxPoints": 5,
           "earnedPoints": 4,
-          "evidence": "커밋이 1개뿐이라 revert/rework 패턴을 직접 관측할 로그가 없음. A~F 카테고리의 가중평균 달성률(67/95 ≈ 70.5%)로 대체 추정",
+          "evidence": "커밋 3개 + 워킹트리 미커밋 diff 1건뿐이라 revert/rework 패턴을 직접 관측할 로그가 없음. A~F 카테고리의 가중평균 달성률(68/95 ≈ 71.6%)로 대체 추정",
           "gap": "직접적인 에이전트 세션 성공/실패 로그가 없음 — 실제 사용 중 에이전트가 자주 헤맨 지점이 있다면 다음 감사에 반영 가능",
           "confidence": "low"
         }
@@ -253,18 +253,18 @@
   "actionList": [
     {
       "rank": 1,
-      "category": "C",
-      "action": "CLAUDE.md에 '용어집' 섹션 추가 — 강의 탭 / 음악 탭 / backend contract 등 정의",
-      "rationale": "온보딩 에이전트가 문맥 추론만으로 프로젝트 고유 용어를 파악해야 함",
-      "impact": 4,
+      "category": "B",
+      "action": "CLAUDE.md '알려진 제약' 문구를 chrome-extension/docs/SETUP.md와 일치하도록 갱신(디바운스 구현 완료 반영) + music-controller.js의 Object.defineProperty 볼륨 락 도입 이유를 한 문단 추가 + .claude/learnings/ 존재를 개발 컨벤션 섹션에 1줄로 링크",
+      "rationale": "B2/B3/F1 세 하위 기준이 모두 같은 근본 원인(CLAUDE.md가 워킹트리 변경을 못 따라감)에서 감점됨 — 한 번의 CLAUDE.md 편집으로 세 곳 모두 회복 가능",
+      "impact": 6,
       "effort": "S",
-      "roi": 4.0
+      "roi": 6.0
     },
     {
       "rank": 2,
       "category": "E",
-      "action": ".github/workflows/ci.yml 추가 — npm run lint(+ node --check)를 PR마다 자동 실행",
-      "rationale": "린트 설정은 생겼지만 아직 CI에 연결되지 않아 사람이 직접 돌려야 강제됨",
+      "action": ".github/workflows/ci.yml 추가 — npm run lint(+ format:check)를 PR마다 자동 실행",
+      "rationale": "린트/포맷 설정은 있지만 아직 CI에 연결되지 않아 사람이 직접 돌려야 강제됨",
       "impact": 4,
       "effort": "S",
       "roi": 4.0
@@ -272,11 +272,11 @@
     {
       "rank": 3,
       "category": "C",
-      "action": "chrome-extension/docs/SETUP.md 또는 새 TROUBLESHOOTING.md에 증상→원인→해결 형식의 트러블슈팅 항목 추가",
-      "rationale": "현재 '알려진 제약'만 있고 실제 에러 메시지별 대응법은 없음",
-      "impact": 3,
+      "action": "CLAUDE.md에 '용어집' 섹션 추가 — 강의 탭 / 음악 탭 / backend contract / desiredVolume 등 정의",
+      "rationale": "온보딩 에이전트가 문맥 추론만으로 프로젝트 고유 용어를 파악해야 함",
+      "impact": 4,
       "effort": "S",
-      "roi": 3.0
+      "roi": 4.0
     },
     {
       "rank": 4,
@@ -298,9 +298,9 @@
     },
     {
       "rank": 6,
-      "category": "A",
-      "action": "icons/ 디렉토리를 CLAUDE.md 파일 트리에 추가하거나(용도가 생기기 전까지) 삭제",
-      "rationale": "설명 없는 빈 디렉토리는 에이전트에게 불필요한 탐색 비용을 유발",
+      "category": "C",
+      "action": "chrome-extension/docs/SETUP.md 또는 새 TROUBLESHOOTING.md에 popup.js errorBox에 뜨는 메시지별(예: chrome.scripting 권한 거부, 재생 가능한 미디어 없음) 대처법 추가",
+      "rationale": ".claude/learnings/로 함정 문서화는 진전됐지만 팝업 UI에서 직접 마주치는 에러 메시지별 대응은 여전히 비어 있음",
       "impact": 1,
       "effort": "S",
       "roi": 1.0
