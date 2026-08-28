@@ -35,24 +35,44 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 async function handleMessage(message, sender) {
   switch (message.type) {
     case "SET_LECTURE_TAB":
-      return { settings: await updateSettings({ lectureTabId: message.tabId, lectureTabTitle: message.tabTitle }) };
+      return {
+        settings: await updateSettings({
+          lectureTabId: message.tabId,
+          lectureTabTitle: message.tabTitle,
+        }),
+      };
 
     case "SET_MUSIC_TAB":
-      return { settings: await updateSettings({ musicTabId: message.tabId, musicTabTitle: message.tabTitle }) };
+      return {
+        settings: await updateSettings({
+          musicTabId: message.tabId,
+          musicTabTitle: message.tabTitle,
+        }),
+      };
 
     case "SET_VOLUME":
-      return { settings: await updateSettings({ volumePercent: message.volumePercent }) };
+      return {
+        settings: await updateSettings({
+          volumePercent: message.volumePercent,
+        }),
+      };
 
     case "GET_SETTINGS":
       return { settings: await getSettings() };
 
     case "LECTURE_STATE": {
       const settings = await getSettings();
-      if (sender.tab?.id !== settings.lectureTabId || !settings.musicTabId) return {};
+      if (sender.tab?.id !== settings.lectureTabId || !settings.musicTabId) {
+        return {};
+      }
 
       const command = message.playing
         ? { type: "MUSIC_COMMAND", action: "pause" }
-        : { type: "MUSIC_COMMAND", action: "play", volume: settings.volumePercent };
+        : {
+            type: "MUSIC_COMMAND",
+            action: "play",
+            volume: settings.volumePercent,
+          };
 
       try {
         await chrome.tabs.sendMessage(settings.musicTabId, command);
@@ -60,7 +80,10 @@ async function handleMessage(message, sender) {
         // Most common cause: the music tab was reloaded/navigated away and
         // lost the injected content script. Surfaced in the console rather
         // than thrown, since there's no popup open to show it to.
-        console.warn("[music-transition] music tab not reachable:", err.message);
+        console.warn(
+          "[music-transition] music tab not reachable:",
+          err.message,
+        );
       }
       return {};
     }
@@ -82,5 +105,7 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
     patch.musicTabId = null;
     patch.musicTabTitle = null;
   }
-  if (Object.keys(patch).length) await updateSettings(patch);
+  if (Object.keys(patch).length) {
+    await updateSettings(patch);
+  }
 });

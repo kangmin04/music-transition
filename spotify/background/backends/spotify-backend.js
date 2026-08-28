@@ -1,10 +1,16 @@
 import { SPOTIFY_CLIENT_ID } from "../config.js";
-import { generateCodeVerifier, generateCodeChallenge, generateState } from "./pkce.js";
+import {
+  generateCodeVerifier,
+  generateCodeChallenge,
+  generateState,
+} from "./pkce.js";
 
 const AUTH_URL = "https://accounts.spotify.com/authorize";
 const TOKEN_URL = "https://accounts.spotify.com/api/token";
 const API_BASE = "https://api.spotify.com/v1";
-const SCOPES = ["user-modify-playback-state", "user-read-playback-state"].join(" ");
+const SCOPES = ["user-modify-playback-state", "user-read-playback-state"].join(
+  " ",
+);
 
 const STORAGE_KEY = "spotifyAuth"; // { accessToken, refreshToken, expiresAt }
 
@@ -50,7 +56,9 @@ export const spotifyBackend = {
     const returnedState = responseUrl.searchParams.get("state");
     const code = responseUrl.searchParams.get("code");
     if (!code || returnedState !== state) {
-      throw new Error("Spotify 인증에 실패했습니다 (state mismatch 또는 code 없음).");
+      throw new Error(
+        "Spotify 인증에 실패했습니다 (state mismatch 또는 code 없음).",
+      );
     }
 
     const tokenRes = await fetch(TOKEN_URL, {
@@ -65,7 +73,9 @@ export const spotifyBackend = {
       }),
     });
     if (!tokenRes.ok) {
-      throw new Error(`토큰 발급 실패: ${tokenRes.status} ${await tokenRes.text()}`);
+      throw new Error(
+        `토큰 발급 실패: ${tokenRes.status} ${await tokenRes.text()}`,
+      );
     }
     const token = await tokenRes.json();
     await setStoredAuth({
@@ -83,15 +93,25 @@ export const spotifyBackend = {
 
   async play(volumePercent) {
     const { deviceId } = await getSettings();
-    if (!deviceId) throw new Error("대상 기기가 선택되지 않았습니다.");
+    if (!deviceId) {
+      throw new Error("대상 기기가 선택되지 않았습니다.");
+    }
     await apiFetch("/me/player", "PUT", { device_ids: [deviceId], play: true });
-    await apiFetch(`/me/player/volume?volume_percent=${encodeURIComponent(volumePercent)}&device_id=${encodeURIComponent(deviceId)}`, "PUT");
+    await apiFetch(
+      `/me/player/volume?volume_percent=${encodeURIComponent(volumePercent)}&device_id=${encodeURIComponent(deviceId)}`,
+      "PUT",
+    );
   },
 
   async pause() {
     const { deviceId } = await getSettings();
-    if (!deviceId) throw new Error("대상 기기가 선택되지 않았습니다.");
-    await apiFetch(`/me/player/pause?device_id=${encodeURIComponent(deviceId)}`, "PUT");
+    if (!deviceId) {
+      throw new Error("대상 기기가 선택되지 않았습니다.");
+    }
+    await apiFetch(
+      `/me/player/pause?device_id=${encodeURIComponent(deviceId)}`,
+      "PUT",
+    );
   },
 };
 

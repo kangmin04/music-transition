@@ -1,0 +1,1 @@
+- [ESLint](eslint.md) — lint 개념, flat config 구조, sourceType 구분, 자주 쓰는 규칙, --fix, Prettier와의 역할 분담

@@ -2,7 +2,9 @@ const $ = (id) => document.getElementById(id);
 
 async function send(message) {
   const res = await chrome.runtime.sendMessage(message);
-  if (res?.error) throw new Error(res.error);
+  if (res?.error) {
+    throw new Error(res.error);
+  }
   return res;
 }
 
@@ -12,10 +14,18 @@ function showError(err) {
 
 async function injectAndAssign(role) {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab?.id) throw new Error("현재 탭을 찾을 수 없습니다.");
+  if (!tab?.id) {
+    throw new Error("현재 탭을 찾을 수 없습니다.");
+  }
 
-  const file = role === "lecture" ? "content/lecture-detector.js" : "content/music-controller.js";
-  await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: [file] });
+  const file =
+    role === "lecture"
+      ? "content/lecture-detector.js"
+      : "content/music-controller.js";
+  await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    files: [file],
+  });
 
   const message =
     role === "lecture"

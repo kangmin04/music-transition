@@ -1,0 +1,6 @@
+node_modules
+package-lock.json
+
+# 문서/생성된 산출물은 포맷팅 대상에서 제외 (내용이 의도치 않게 바뀌는 걸 방지)
+*.md
+docs/
