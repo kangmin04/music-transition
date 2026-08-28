@@ -1,1 +1,4 @@
 - [ESLint](eslint.md) — lint 개념, flat config 구조, sourceType 구분, 자주 쓰는 규칙, --fix, Prettier와의 역할 분담
+- [Chrome 확장 프로그램 API](chrome-extension-apis.md) — runtime/tabs 메시징, activeTab vs tabs 권한, MV3 서비스워커 특성, 그 외 유용한 API
+- [웹 미디어 볼륨 되돌림 문제](html-media-volume-override.md) — 사이트가 볼륨을 되돌리는 원리, GainNode 함정, 감시자 패턴과 tabCapture 대안
+- [HTML5 시크 중 가짜 pause/play](html5-media-seek-pause-events.md) — 시크가 pause/play 이벤트를 유발하는 이유와 디바운스 대응

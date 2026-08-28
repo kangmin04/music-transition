@@ -7,26 +7,56 @@
   <body>
     <h1>강의 pause → 음악 탭 전환</h1>
 
-    <section>
-      <h2>1. 강의 탭 지정</h2>
-      <p class="hint">유튜브 등 강의 영상을 재생 중인 탭에서 눌러주세요.</p>
-      <button id="setLectureTabBtn">현재 탭을 강의 탭으로 지정</button>
-      <p id="lectureTabStatus">지정 안 됨</p>
+    <section class="group">
+      <h2>강의</h2>
+      <p
+        class="hint"
+        id="lectureHint"
+        data-default="유튜브 등 강의 영상을 재생 중인 탭에서 눌러주세요."
+      >
+        유튜브 등 강의 영상을 재생 중인 탭에서 눌러주세요.
+      </p>
+      <div class="row">
+        <button id="setLectureTabBtn">현재 탭을 강의 탭으로 지정</button>
+        <span id="lectureTabStatus" class="badge">지정 안 됨</span>
+      </div>
+      <div class="row slider-row">
+        <label for="lectureVolumeSlider">볼륨</label>
+        <input
+          type="range"
+          id="lectureVolumeSlider"
+          min="0"
+          max="100"
+          value="100"
+        />
+        <span id="lectureVolumeValue">100</span>%
+      </div>
     </section>
 
-    <section>
-      <h2>2. 음악 탭 지정</h2>
-      <p class="hint">
+    <section class="group">
+      <h2>음악</h2>
+      <p
+        class="hint"
+        id="musicHint"
+        data-default="YouTube Music, Spotify Web Player 등 아무 사이트나 가능합니다."
+      >
         YouTube Music, Spotify Web Player 등 아무 사이트나 가능합니다.
       </p>
-      <button id="setMusicTabBtn">현재 탭을 음악 탭으로 지정</button>
-      <p id="musicTabStatus">지정 안 됨</p>
-    </section>
-
-    <section>
-      <h2>3. 음악 볼륨</h2>
-      <input type="range" id="volumeSlider" min="0" max="100" value="50" />
-      <span id="volumeValue">50</span>%
+      <div class="row">
+        <button id="setMusicTabBtn">현재 탭을 음악 탭으로 지정</button>
+        <span id="musicTabStatus" class="badge">지정 안 됨</span>
+      </div>
+      <div class="row slider-row">
+        <label for="musicVolumeSlider">볼륨</label>
+        <input
+          type="range"
+          id="musicVolumeSlider"
+          min="0"
+          max="100"
+          value="50"
+        />
+        <span id="musicVolumeValue">50</span>%
+      </div>
     </section>
 
     <p id="errorBox" class="error"></p>

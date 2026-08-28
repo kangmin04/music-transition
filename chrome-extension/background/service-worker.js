@@ -3,12 +3,14 @@
 // (The Spotify-remote-device version lives in backends/spotify-backend.js
 // and will be wired back in as an alternate mode in a later phase.)
 
+// 상태를 갖고있는 유일한 파일. 
 const DEFAULT_SETTINGS = {
   lectureTabId: null,
   lectureTabTitle: null,
   musicTabId: null,
   musicTabTitle: null,
-  volumePercent: 50,
+  lectureVolumePercent: 100,
+  musicVolumePercent: 20,
 };
 
 async function getSettings() {
@@ -50,12 +52,46 @@ async function handleMessage(message, sender) {
         }),
       };
 
-    case "SET_VOLUME":
-      return {
-        settings: await updateSettings({
-          volumePercent: message.volumePercent,
-        }),
-      };
+    case "SET_LECTURE_VOLUME": {
+      const settings = await updateSettings({
+        lectureVolumePercent: message.volumePercent,
+      });
+      if (settings.lectureTabId) {
+        try {
+          await chrome.tabs.sendMessage(settings.lectureTabId, {
+            type: "LECTURE_VOLUME_COMMAND",
+            volumePercent: settings.lectureVolumePercent,
+          });
+        } catch (err) {
+          console.warn(
+            "[music-transition] lecture tab not reachable:",
+            err.message,
+          );
+        }
+      }
+      return { settings };
+    }
+
+    case "SET_MUSIC_VOLUME": {
+      const settings = await updateSettings({
+        musicVolumePercent: message.volumePercent,
+      });
+      if (settings.musicTabId) {
+        try {
+          await chrome.tabs.sendMessage(settings.musicTabId, {
+            type: "MUSIC_COMMAND",
+            action: "set_volume",
+            volume: settings.musicVolumePercent,
+          });
+        } catch (err) {
+          console.warn(
+            "[music-transition] music tab not reachable:",
+            err.message,
+          );
+        }
+      }
+      return { settings };
+    }
 
     case "GET_SETTINGS":
       return { settings: await getSettings() };
@@ -71,7 +107,7 @@ async function handleMessage(message, sender) {
         : {
             type: "MUSIC_COMMAND",
             action: "play",
-            volume: settings.volumePercent,
+            volume: settings.musicVolumePercent,
           };
 
       try {
